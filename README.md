@@ -3,8 +3,6 @@
 > [!WARNING]  
 > This project is still in early development. Certain features may change, and the software may be unstable. Please use at your own discretion.
 
-> A MeshCore to MQTT Bridge.
-
 ## Requirements
 
 The MeshCore to MQTT Bridge requires you have a device that is flashed with the **Companion USB**, or connected to Wi-Fi.
