@@ -1,0 +1,14 @@
+{
+    "compilerOptions": {
+        "module": "nodenext",
+        "outDir": "dist",
+        "baseUrl": ".",
+        "target": "esnext",
+        "esModuleInterop": true,
+        "moduleResolution": "nodenext",
+        "resolveJsonModule": true,
+        "skipLibCheck": true
+    },
+    "include": ["src/**/*"],
+    "exclude": ["node_modules", "**/*.test.ts"]
+}

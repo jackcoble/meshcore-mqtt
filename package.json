@@ -1,0 +1,29 @@
+{
+    "name": "meshcore-mqtt",
+    "version": "0.0.1",
+    "description": "Broadcast MeshCore data over MQTT",
+    "main": "dist/index.js",
+    "scripts": {
+        "start": "tsx src/index.ts",
+        "build": "tsc",
+        "test": "vitest"
+    },
+    "keywords": [],
+    "author": "Jack Coble <hello@jackcoble.dev>",
+    "license": "ISC",
+    "packageManager": "pnpm@10.28.1",
+    "devDependencies": {
+        "@types/node": "^25.0.9",
+        "@vitest/coverage-v8": "4.0.17",
+        "prettier": "^3.8.1",
+        "tsx": "^4.21.0",
+        "typescript": "^5.9.3",
+        "vitest": "^4.0.17"
+    },
+    "dependencies": {
+        "commander": "^14.0.2",
+        "mqtt": "^5.14.1",
+        "pino": "^10.3.0",
+        "serialport": "^13.0.0"
+    }
+}
