@@ -141,8 +141,7 @@ export class MeshCoreBridge {
                     `Unknown response code: 0x${data[0].toString(16)}`
                 );
 
-                topic = "meshcore/unknown";
-                payload = data;
+                break;
         }
 
         // Publish to MQTT if we have a topic and payload
