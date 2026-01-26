@@ -54,7 +54,7 @@ export class SyncNextMessageCommand extends Command {
                 sender_timestamp: senderTimestamp,
                 text: text,
             };
-        } else if (ResponseCode.CHANNEL_MSG_RECV) {
+        } else if (code === ResponseCode.CHANNEL_MSG_RECV) {
             const channelIdx = r.u8();
             const pathLen = r.u8();
             const txtType = r.u8();
@@ -69,7 +69,7 @@ export class SyncNextMessageCommand extends Command {
                 sender_timestamp: senderTimestamp,
                 text: text,
             };
-        } else if (ResponseCode.CONTACT_MSG_RECV_V3) {
+        } else if (code === ResponseCode.CONTACT_MSG_RECV_V3) {
             const snr = r.u8() / 4;
             r.bytes(2);
             const pubkeyPrefix = r.bytes(6);
@@ -87,7 +87,7 @@ export class SyncNextMessageCommand extends Command {
                 sender_timestamp: senderTimestamp,
                 text: text,
             };
-        } else if (ResponseCode.CHANNEL_MSG_RECV_V3) {
+        } else if (code === ResponseCode.CHANNEL_MSG_RECV_V3) {
             const snr = r.u8() / 4;
             r.bytes(2);
             const channelIdx = r.u8();
