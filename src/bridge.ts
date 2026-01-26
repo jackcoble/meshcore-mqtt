@@ -17,6 +17,7 @@ export class MeshCoreBridge {
     private running: boolean = false;
     private appStartReceived: boolean = false;
     private deviceInfoReceived: boolean = false;
+    private syncingMessages: boolean = false;
 
     constructor(
         private transport: ITransport,
@@ -82,6 +83,9 @@ export class MeshCoreBridge {
 
                     topic = "meshcore/device_info";
                     payload = deviceInfo;
+
+                    // Start syncing messages after device info is received
+                    this.startMessageSync();
                 } catch (err) {
                     this.logger.error(
                         { err },
@@ -90,24 +94,45 @@ export class MeshCoreBridge {
                 }
                 break;
 
+            // Messages
+            case ResponseCode.CONTACT_MSG_RECV:
+            case ResponseCode.CHANNEL_MSG_RECV:
+            case ResponseCode.CONTACT_MSG_RECV_V3:
             case ResponseCode.CHANNEL_MSG_RECV_V3:
-                this.logger.info("Received CHANNEL_MSG_RECV_V3 from MeshCore");
+                this.logger.info(
+                    `Received ${ResponseCode[data[0]]} from MeshCore`
+                );
 
-                const channelMessage: any =
-                    new SyncNextMessageCommand().fromBuffer(data);
+                const message: any = new SyncNextMessageCommand().fromBuffer(
+                    data
+                );
 
-                topic = `meshcore/channels/${channelMessage.channel_idx}`;
-                payload = channelMessage;
+                // Determine if its channel or direct message
+                if (message.channel_idx) {
+                    topic = `meshcore/channels/${message.channel_idx}`;
+                } else {
+                    topic = `meshcore/messages/all`;
+                }
 
+                payload = message;
+
+                // Continue syncing messages
+                if (this.syncingMessages) {
+                    this.sendSyncNextMessage();
+                }
+
+                break;
+
+            case ResponseCode.NO_MORE_MESSAGES:
+                this.logger.info("Received NO_MORE_MESSAGES from MeshCore");
+                this.syncingMessages = false;
+                this.logger.info("Message sync completed");
                 break;
 
             // Push Codes - can be pushed to the App (this bridge) at any time
             case PushCode.MSG_WAITING:
-                this.logger.info(
-                    "Received MSG_WAITING. Sending CMD_SYNC_NEXT_MESSAGE"
-                );
-
-                this.sendSyncNextMessage();
+                this.logger.info("Received MSG_WAITING. Starting message sync");
+                this.startMessageSync();
 
                 break;
 
@@ -137,6 +162,8 @@ export class MeshCoreBridge {
                     }
                 }
             );
+
+            this.mqttClient.publish("meshcore/all", JSON.stringify(payload));
         }
     }
 
@@ -165,6 +192,20 @@ export class MeshCoreBridge {
         this.logger.info("Sending SyncNextMessage command to MeshCore");
         const syncNextMessageCommand = new SyncNextMessageCommand();
         this.transport.sendCommand(syncNextMessageCommand);
+    }
+
+    /**
+     * Start syncing messages from MeshCore
+     */
+    private startMessageSync(): void {
+        if (this.syncingMessages) {
+            this.logger.debug("Already syncing messages, skipping");
+            return;
+        }
+
+        this.logger.info("Starting message sync");
+        this.syncingMessages = true;
+        this.sendSyncNextMessage();
     }
 
     /**
