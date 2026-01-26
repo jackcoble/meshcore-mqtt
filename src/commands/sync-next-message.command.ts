@@ -41,7 +41,7 @@ export class SyncNextMessageCommand extends Command {
 
         // Handle V3 Channel Message Response for now!
         if (code === ResponseCode.CHANNEL_MSG_RECV_V3) {
-            const snr = r.u8() * 4;
+            const snr = r.u8() / 4;
             r.bytes(2);
             const channelIdx = r.u8();
             const pathLen = r.u8();
