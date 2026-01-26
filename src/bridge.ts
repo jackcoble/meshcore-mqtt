@@ -105,20 +105,19 @@ export class MeshCoreBridge {
                     `Received ${ResponseCode[data[0]]} from MeshCore`
                 );
 
-                const message: any = new SyncNextMessageCommand().fromBuffer(
-                    data
-                );
+                const message = new SyncNextMessageCommand();
+                const messageData: any = message.fromBuffer(data);
 
-                // Determine if its channel or direct message
-                if (message.channel_idx && message.path_len !== -1) {
+                // Determine if its channel
+                if (message.isChannelMessage()) {
                     // Message was sent in a channel
-                    topic = `${this.config.mqttTopic}/message/channel/${message.channel_idx}`;
-                } else {
+                    topic = `${this.config.mqttTopic}/message/channel/${messageData.channel_idx}`;
+                } else if (message.isDirectMessage()) {
                     // Message was sent directly
-                    topic = `${this.config.mqttTopic}/message/direct/${message.pubkey_prefix}`;
+                    topic = `${this.config.mqttTopic}/message/direct/${messageData.pubkey_prefix}`;
                 }
 
-                payload = message;
+                payload = messageData;
 
                 // Continue syncing messages
                 if (this.syncingMessages) {

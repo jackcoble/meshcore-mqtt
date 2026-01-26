@@ -20,6 +20,30 @@ export class SyncNextMessageCommand extends Command {
         ResponseCode.CHANNEL_MSG_RECV_V3, // V3 App Client
     ];
 
+    private messageResponseCode: ResponseCode;
+
+    /**
+     * Check if the message was sent directly (contact message)
+     * @returns {boolean} True if message was direct/contact message
+     */
+    isDirectMessage(): boolean {
+        return (
+            this.messageResponseCode === ResponseCode.CONTACT_MSG_RECV ||
+            this.messageResponseCode === ResponseCode.CONTACT_MSG_RECV_V3
+        );
+    }
+
+    /**
+     * Check if the message was sent via channel
+     * @returns {boolean} True if message was channel message
+     */
+    isChannelMessage(): boolean {
+        return (
+            this.messageResponseCode === ResponseCode.CHANNEL_MSG_RECV ||
+            this.messageResponseCode === ResponseCode.CHANNEL_MSG_RECV_V3
+        );
+    }
+
     /**
      * Serialize SYNC_NEXT_MESSAGE command to buffer
      * @returns {Buffer} The serialized command buffer
@@ -38,6 +62,8 @@ export class SyncNextMessageCommand extends Command {
 
         const code = r.u8();
         this.validateResponseCode(code);
+
+        this.messageResponseCode = code;
 
         if (code === ResponseCode.CONTACT_MSG_RECV) {
             const pubkeyPrefix = r.bytes(6);
