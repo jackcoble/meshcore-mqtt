@@ -7,7 +7,7 @@
 
 ## Requirements
 
-The MeshCore to MQTT Bridge requires you have a device that is flashed with the **Companion USB** or **Companion TCP** firmware.
+The MeshCore to MQTT Bridge requires you have a device that is flashed with the **Companion USB**, or connected to Wi-Fi.
 
 ## Message Type Support
 
