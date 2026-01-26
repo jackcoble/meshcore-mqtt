@@ -39,8 +39,55 @@ export class SyncNextMessageCommand extends Command {
         const code = r.u8();
         this.validateResponseCode(code);
 
-        // Handle V3 Channel Message Response for now!
-        if (code === ResponseCode.CHANNEL_MSG_RECV_V3) {
+        if (code === ResponseCode.CONTACT_MSG_RECV) {
+            const pubkeyPrefix = r.bytes(6);
+            const pathLen = r.u8();
+            const txtType = r.u8();
+            const senderTimestamp = r.u32le();
+            const text = r.restUtf8();
+
+            return {
+                code: code,
+                pubkey_prefix: pubkeyPrefix.toString("hex"),
+                path_len: pathLen == 0xff ? -1 : pathLen,
+                txt_type: txtType,
+                sender_timestamp: senderTimestamp,
+                text: text,
+            };
+        } else if (ResponseCode.CHANNEL_MSG_RECV) {
+            const channelIdx = r.u8();
+            const pathLen = r.u8();
+            const txtType = r.u8();
+            const senderTimestamp = r.u32le();
+            const text = r.restUtf8();
+
+            return {
+                code: code,
+                channel_idx: channelIdx,
+                path_len: pathLen == 0xff ? -1 : pathLen,
+                txt_type: txtType,
+                sender_timestamp: senderTimestamp,
+                text: text,
+            };
+        } else if (ResponseCode.CONTACT_MSG_RECV_V3) {
+            const snr = r.u8() / 4;
+            r.bytes(2);
+            const pubkeyPrefix = r.bytes(6);
+            const pathLen = r.u8();
+            const txtType = r.u8();
+            const senderTimestamp = r.u32le();
+            const text = r.restUtf8();
+
+            return {
+                code: code,
+                snr: snr,
+                pubkey_prefix: pubkeyPrefix.toString("hex"),
+                path_len: pathLen == 0xff ? -1 : pathLen,
+                txt_type: txtType,
+                sender_timestamp: senderTimestamp,
+                text: text,
+            };
+        } else if (ResponseCode.CHANNEL_MSG_RECV_V3) {
             const snr = r.u8() / 4;
             r.bytes(2);
             const channelIdx = r.u8();
@@ -59,7 +106,5 @@ export class SyncNextMessageCommand extends Command {
                 text: text,
             };
         }
-
-        return {};
     }
 }
