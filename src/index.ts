@@ -72,7 +72,7 @@ import type { ITransport } from "./transports/transport";
         process.exit(1);
     }
 
-    const bridge = new MeshCoreBridge(transport, mqttClient, logger);
+    const bridge = new MeshCoreBridge(transport, config, mqttClient, logger);
 
     bridge.start();
 

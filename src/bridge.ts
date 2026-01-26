@@ -8,6 +8,7 @@ import {
     SyncNextMessageCommand,
 } from "./commands";
 import { PushCode } from "./constants";
+import { Config } from "./config";
 
 /**
  * Bridge between MeshCore serial interface and MQTT.
@@ -21,6 +22,7 @@ export class MeshCoreBridge {
 
     constructor(
         private transport: ITransport,
+        private config: Config,
         private mqttClient: mqtt.MqttClient,
         private logger: Logger
     ) {
@@ -51,7 +53,7 @@ export class MeshCoreBridge {
 
                     this.appStartReceived = true;
 
-                    topic = "meshcore/self_info";
+                    topic = `${this.config.mqttTopic}/self_info`;
                     payload = info;
 
                     // After receiving SELF_INFO, must send DEVICE_QUERY
@@ -81,7 +83,7 @@ export class MeshCoreBridge {
 
                     this.deviceInfoReceived = true;
 
-                    topic = "meshcore/device_info";
+                    topic = `${this.config.mqttTopic}/device_info`;
                     payload = deviceInfo;
 
                     // Start syncing messages after device info is received
@@ -108,10 +110,12 @@ export class MeshCoreBridge {
                 );
 
                 // Determine if its channel or direct message
-                if (message.channel_idx) {
-                    topic = `meshcore/channels/${message.channel_idx}`;
+                if (message.channel_idx && message.path_len !== -1) {
+                    // Message was sent in a channel
+                    topic = `${this.config.mqttTopic}/message/channel/${message.channel_idx}`;
                 } else {
-                    topic = `meshcore/messages/all`;
+                    // Message was sent directly
+                    topic = `${this.config.mqttTopic}/message/direct/${message.pubkey_prefix}`;
                 }
 
                 payload = message;
@@ -162,7 +166,11 @@ export class MeshCoreBridge {
                 }
             );
 
-            this.mqttClient.publish("meshcore/all", JSON.stringify(payload));
+            // Publish to "all" topic
+            this.mqttClient.publish(
+                `${this.config.mqttTopic}/all`,
+                JSON.stringify(payload)
+            );
         }
     }
 
