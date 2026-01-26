@@ -1,7 +1,6 @@
 import mqtt from "mqtt";
 import { ITransport } from "./transports/transport";
 import { Logger } from "pino";
-import { EventType } from "./events";
 import {
     AppStartCommand,
     DeviceQueryCommand,
@@ -33,7 +32,6 @@ export class MeshCoreBridge {
      */
     private handleFrame(data: Buffer): void {
         this.logger.debug(
-            { eventType: EventType.MESHCORE_EVENT },
             `Received frame: ${data.length} bytes, code: 0x${data[0].toString(16)}`
         );
 
@@ -115,7 +113,6 @@ export class MeshCoreBridge {
 
             default:
                 this.logger.warn(
-                    { eventType: EventType.MESHCORE_EVENT },
                     `Unknown response code: 0x${data[0].toString(16)}`
                 );
 
