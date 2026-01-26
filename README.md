@@ -9,6 +9,29 @@
 
 The MeshCore to MQTT Bridge requires you have a device that is flashed with the **Companion USB** or **Companion TCP** firmware.
 
+## Message Type Support
+
+### Response Codes
+
+| Message Type          | Status | MQTT Topic                        |
+| --------------------- | ------ | --------------------------------- |
+| `SELF_INFO`           | ✅     | `meshcore/self_info`              |
+| `DEVICE_INFO`         | ✅     | `meshcore/device_info`            |
+| `CONTACT_MSG_RECV`    | ✅     | `meshcore/messages/all`           |
+| `CHANNEL_MSG_RECV`    | ✅     | `meshcore/channels/{channel_idx}` |
+| `CONTACT_MSG_RECV_V3` | ✅     | `meshcore/messages/all`           |
+| `CHANNEL_MSG_RECV_V3` | ✅     | `meshcore/channels/{channel_idx}` |
+| `NO_MORE_MESSAGES`    | ✅     | -                                 |
+
+### Push Notification Codes
+
+| Push Notification Code | Status | Description                     |
+| ---------------------- | ------ | ------------------------------- |
+| `MSG_WAITING`          | ✅     | Triggers automatic message sync |
+
+> [!NOTE]
+> All received messages are also published to `meshcore/all` in addition to their specific topics.
+
 ## Installation (local)
 
 ```bash
