@@ -95,9 +95,8 @@ export class MeshCoreBridge {
             case ResponseCode.CHANNEL_MSG_RECV_V3:
                 this.logger.info("Received CHANNEL_MSG_RECV_V3 from MeshCore");
 
-                const channelMessage = new SyncNextMessageCommand().fromBuffer(
-                    data
-                );
+                const channelMessage: any =
+                    new SyncNextMessageCommand().fromBuffer(data);
 
                 topic = `meshcore/channels/${channelMessage.channel_idx}`;
                 payload = channelMessage;
