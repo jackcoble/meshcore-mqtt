@@ -24,19 +24,10 @@ export class GetBatteryAndStorageCommand extends Command {
     readonly commandCode = CommandCode.GET_BATT_AND_STORAGE;
     readonly expectedResponseCodes = [ResponseCode.BATT_AND_STORAGE];
 
-    /**
-     * Serialize GET_BATT_AND_STORAGE command to buffer
-     * @returns {Buffer} The serialized command buffer
-     */
     toBuffer(): Buffer {
         return Buffer.concat([Buffer.from([CommandCode.GET_BATT_AND_STORAGE])]);
     }
 
-    /**
-     * Parse BATT_AND_STORAGE response from buffer
-     * @param data
-     * @returns {object} Parsed BATT_AND_STORAGE data
-     */
     fromBuffer(data: Buffer): BattAndStorageResponse {
         const r = new BinaryReader(data);
 

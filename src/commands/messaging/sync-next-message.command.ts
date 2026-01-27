@@ -43,19 +43,10 @@ export class SyncNextMessageCommand extends Command {
         );
     }
 
-    /**
-     * Serialize SYNC_NEXT_MESSAGE command to buffer
-     * @returns {Buffer} The serialized command buffer
-     */
     toBuffer(): Buffer {
         return Buffer.concat([Buffer.from([CommandCode.SYNC_NEXT_MESSAGE])]);
     }
 
-    /**
-     * Parse response from buffer
-     * @param data
-     * @returns {object} Parsed data
-     */
     fromBuffer(data: Buffer): object {
         const DIRECT_PATH_LEN = 0xff;
         const SNR_DIVISOR = 4;
@@ -98,7 +89,7 @@ export class SyncNextMessageCommand extends Command {
                 text: text,
             };
         } else if (code === ResponseCode.CONTACT_MSG_RECV_V3) {
-            const snr = r.u8() / 4;
+            const snr = r.u8() / SNR_DIVISOR;
             r.bytes(2); // Reserved
             const pubkeyPrefix = r.bytes(6);
             const pathLen = r.u8();
@@ -116,7 +107,7 @@ export class SyncNextMessageCommand extends Command {
                 text: text,
             };
         } else if (code === ResponseCode.CHANNEL_MSG_RECV_V3) {
-            const snr = r.u8() / 4;
+            const snr = r.u8() / SNR_DIVISOR;
             r.bytes(2); // Reserved
             const channelIdx = r.u8();
             const pathLen = r.u8();

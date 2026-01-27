@@ -53,10 +53,6 @@ export class AppStartCommand extends ParameterisedCommand {
         return this;
     }
 
-    /**
-     * Serialize APP_START command to buffer
-     * @returns {Buffer} The serialized command buffer
-     */
     toBuffer(): Buffer {
         if (!this.params) {
             throw new Error("Command not initialized - call fromJSON first");
@@ -69,11 +65,6 @@ export class AppStartCommand extends ParameterisedCommand {
         ]);
     }
 
-    /**
-     * Parse SELF_INFO response from buffer
-     * @param data
-     * @returns {object} Parsed SELF_INFO data
-     */
     fromBuffer(data: Buffer): SelfInfoResponse {
         const r = new BinaryReader(data);
 

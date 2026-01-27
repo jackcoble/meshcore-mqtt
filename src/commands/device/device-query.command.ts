@@ -43,10 +43,6 @@ export class DeviceQueryCommand extends ParameterisedCommand {
         return this;
     }
 
-    /**
-     * Serialize DEVICE_QUERY command to buffer
-     * @returns {Buffer} The serialized command buffer
-     */
     toBuffer(): Buffer {
         if (!this.params) {
             throw new Error("Command not initialized - call fromJSON first");
@@ -58,11 +54,6 @@ export class DeviceQueryCommand extends ParameterisedCommand {
         ]);
     }
 
-    /**
-     * Parse DEVICE_INFO response from buffer
-     * @param data - Response buffer from device
-     * @returns Parsed device info
-     */
     fromBuffer(data: Buffer): DeviceInfoResponse {
         const r = new BinaryReader(data);
         const code = r.u8();
