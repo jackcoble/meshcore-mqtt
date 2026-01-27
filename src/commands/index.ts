@@ -12,4 +12,4 @@ export * from "./base/registry";
 export * from "./device/app-start.command";
 export * from "./device/device-query.command";
 export * from "./messaging/sync-next-message.command";
-export * from "./device/get-batt-and-storage.command";
+export * from "./device/get-battery-and-storage.command";
