@@ -13,9 +13,9 @@ export abstract class Command {
     abstract toBuffer(): Buffer;
 
     /**
-     * Serialise a command from a JSON object, ready for transmission
+     * Deserialise a response from the radio
      */
-    abstract fromJSON(data: string): Buffer;
+    abstract fromBuffer(data: Buffer): object;
 
     /**
      * Validate the response code received from the device
