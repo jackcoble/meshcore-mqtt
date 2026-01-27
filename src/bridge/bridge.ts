@@ -12,15 +12,23 @@ import { PushCode } from "../constants";
 import { Config } from "../config";
 import { createCommandFromMessage } from "./handler";
 
+interface QueuedCommand {
+    command: any;
+    retries?: number;
+}
+
 /**
  * Bridge between MeshCore serial interface and MQTT.
  * Handles receiving messages from MeshCore and publishing them to MQTT topics.
  */
 export class MeshCoreBridge {
-    private running: boolean = false;
-    private appStartReceived: boolean = false;
-    private deviceInfoReceived: boolean = false;
-    private syncingMessages: boolean = false;
+    private running = false;
+    private appStartReceived = false;
+    private deviceInfoReceived = false;
+    private syncingMessages = false;
+
+    private commandQueue: QueuedCommand[] = [];
+    private processingQueue = false;
 
     constructor(
         private transport: ITransport,
@@ -29,11 +37,37 @@ export class MeshCoreBridge {
         private logger: Logger
     ) {
         this.transport.onFrame((data) => this.handleFrame(data));
-        this.setupMqttSubscriptions();
     }
 
     /**
-     * Setup MQTT subscriptions for incoming commands
+     * Start the bridge and set up MQTT subscriptions
+     */
+    start(): void {
+        if (this.running) return;
+        this.running = true;
+
+        this.logger.info("MeshCore to MQTT Bridge started");
+        this.setupMqttSubscriptions();
+        this.sendAppStart();
+    }
+
+    /**
+     * Stop the bridge and clean up MQTT
+     */
+    stop(): void {
+        if (!this.running) return;
+        this.running = false;
+
+        this.mqttClient.removeAllListeners("message");
+        this.mqttClient.unsubscribe(`${this.config.mqttTopic}/command`, () => {
+            this.mqttClient.end();
+        });
+
+        this.logger.info("MeshCore to MQTT Bridge stopped");
+    }
+
+    /**
+     * Set up MQTT subscription for commands
      */
     private setupMqttSubscriptions(): void {
         const commandTopic = `${this.config.mqttTopic}/command`;
@@ -61,7 +95,7 @@ export class MeshCoreBridge {
 
     /**
      * Handle incoming command from MQTT
-     * @param message Buffer containing the JSON command
+     * It should be validated and added to the queue
      */
     private handleIncomingCommand(message: Buffer): void {
         try {
@@ -69,9 +103,7 @@ export class MeshCoreBridge {
             this.logger.debug({ json }, "Received command from MQTT");
 
             const command = createCommandFromMessage(json);
-            this.logger.info({ type: json.type }, "Sending command to device");
-
-            this.transport.sendCommand(command);
+            this.enqueueCommand(command);
         } catch (err) {
             const errorMessage =
                 err instanceof Error ? err.message : String(err);
@@ -79,108 +111,129 @@ export class MeshCoreBridge {
                 { err, message: message.toString() },
                 "Failed to process incoming command"
             );
-
-            const response = JSON.stringify({
-                success: false,
-                error: errorMessage,
-            });
-
-            const allTopic = `${this.config.mqttTopic}/all`;
-            this.mqttClient.publish(allTopic, response);
+            this.publishError({ success: false, error: errorMessage });
         }
     }
 
     /**
-     * Handle incoming frame from MeshCore
-     * @param data Buffer containing the frame data
+     * Queue command for rate-limited sending
+     */
+    private enqueueCommand(command: any) {
+        this.commandQueue.push({ command, retries: 0 });
+
+        if (!this.processingQueue) {
+            this.processCommandQueue();
+        }
+    }
+
+    /**
+     * Process queued commands with a small delay and retries
+     */
+    private async processCommandQueue(): Promise<void> {
+        this.processingQueue = true;
+
+        this.logger.info(`Command queue length: ${this.commandQueue.length}`);
+
+        while (this.commandQueue.length > 0) {
+            const item = this.commandQueue.shift();
+            if (!item.retries) {
+                item.retries = 0;
+            }
+
+            try {
+                this.transport.sendCommand(item.command);
+            } catch (err) {
+                item.retries++;
+
+                if (item.retries <= 5) {
+                    const delay = 1000 * 2 ** item.retries; // exponential backoff (milliseconds)
+
+                    this.logger.warn(
+                        { err, retries: item.retries },
+                        `Retrying command in ${delay}ms`
+                    );
+
+                    await this.delay(delay);
+                    this.commandQueue.unshift(item);
+                } else {
+                    this.logger.error(
+                        { err },
+                        "Command failed after max retries"
+                    );
+                }
+            }
+
+            // Fixed 1s delay between commands to avoid flooding MeshCore radio
+            await this.delay(1000);
+        }
+
+        this.processingQueue = false;
+    }
+
+    /**
+     * Waits for a given number of milliseconds
+     * @param ms
+     * @returns
+     */
+    private delay(ms: number) {
+        return new Promise((resolve) => setTimeout(resolve, ms));
+    }
+
+    /**
+     * Handle frames from MeshCore
      */
     private handleFrame(data: Buffer): void {
         this.logger.debug(
             `Received frame: ${data.length} bytes, code: 0x${data[0].toString(16)}`
         );
 
-        // Set the Topic and Payload
         let topic: string | null = null;
         let payload: any = null;
 
-        // Check the first byte to determine the type of response
         switch (data[0]) {
             case ResponseCode.SELF_INFO:
-                this.logger.info("Received SELF_INFO response from MeshCore");
-
                 try {
                     const info = new AppStartCommand().fromBuffer(data);
-                    this.logger.debug({ info }, "Parsed SELF_INFO data");
-
                     this.appStartReceived = true;
-
                     topic = `${this.config.mqttTopic}/self_info`;
                     payload = info;
 
-                    // After receiving SELF_INFO, must send DEVICE_QUERY
-                    if (!this.deviceInfoReceived) {
-                        this.sendDeviceQuery();
-                    }
+                    if (!this.deviceInfoReceived) this.sendDeviceQuery();
                 } catch (err) {
-                    this.logger.error(
-                        { err },
-                        "Failed to parse SELF_INFO response"
-                    );
+                    this.logger.error({ err }, "Failed to parse SELF_INFO");
                 }
-
                 break;
 
             case ResponseCode.DEVICE_INFO:
-                this.logger.info("Received DEVICE_INFO response from MeshCore");
-
                 try {
                     const deviceInfo = new DeviceQueryCommand().fromBuffer(
                         data
                     );
-                    this.logger.debug(
-                        { deviceInfo },
-                        "Parsed DEVICE_INFO data"
-                    );
-
                     this.deviceInfoReceived = true;
-
                     topic = `${this.config.mqttTopic}/device_info`;
                     payload = deviceInfo;
 
-                    // Start syncing messages after device info is received
                     this.startMessageSync();
                 } catch (err) {
-                    this.logger.error(
-                        { err },
-                        "Failed to parse DEVICE_INFO response"
-                    );
+                    this.logger.error({ err }, "Failed to parse DEVICE_INFO");
                 }
                 break;
 
-            // Messages
             case ResponseCode.CONTACT_MSG_RECV:
             case ResponseCode.CHANNEL_MSG_RECV:
             case ResponseCode.CONTACT_MSG_RECV_V3:
             case ResponseCode.CHANNEL_MSG_RECV_V3:
-                this.logger.info(
-                    `Received ${ResponseCode[data[0]]} from MeshCore`
-                );
-
                 const message = new SyncNextMessageCommand();
                 const messageData: any = message.fromBuffer(data);
 
-                // Determine if its channel
                 if (message.isChannelMessage()) {
-                    // Message was sent in a channel
                     topic = `${this.config.mqttTopic}/message/channel/${messageData.channel_idx}`;
                 } else if (message.isDirectMessage()) {
-                    // Message was sent directly
                     topic = `${this.config.mqttTopic}/message/direct/${messageData.pubkey_prefix}`;
                 }
 
                 payload = messageData;
 
-                // Continue syncing messages
                 if (this.syncingMessages) {
                     this.sendSyncNextMessage();
                 }
@@ -188,121 +241,111 @@ export class MeshCoreBridge {
                 break;
 
             case ResponseCode.NO_MORE_MESSAGES:
-                this.logger.info("Received NO_MORE_MESSAGES from MeshCore");
                 this.syncingMessages = false;
                 this.logger.info("Message sync completed");
                 break;
 
             case ResponseCode.BATT_AND_STORAGE:
-                this.logger.info(
-                    "Received BATT_AND_STORAGE response from MeshCore"
-                );
-
-                const batteryAndStorage = new GetBatteryAndStorageCommand();
-                const response = batteryAndStorage.fromBuffer(data);
-
+                payload = new GetBatteryAndStorageCommand().fromBuffer(data);
                 topic = `${this.config.mqttTopic}/battery_and_storage`;
-                payload = response;
-
                 break;
 
-            // Push Codes - can be pushed to the App (this bridge) at any time
             case PushCode.MSG_WAITING:
                 this.logger.info("Received MSG_WAITING. Starting message sync");
                 this.startMessageSync();
-
                 break;
 
             default:
                 this.logger.warn(
                     `Unknown response code: 0x${data[0].toString(16)}`
                 );
-
-                break;
         }
 
-        // Publish to MQTT if we have a topic and payload
         if (topic && payload) {
-            this.mqttClient.publish(
-                topic,
-                JSON.stringify(payload),
-                { qos: 1 },
-                (err) => {
-                    if (err) {
-                        this.logger.error(
-                            { err, topic },
-                            "Failed to publish to MQTT"
-                        );
-                    } else {
-                        this.logger.debug({ topic }, "Published to MQTT");
-                    }
-                }
-            );
-
-            // Publish to "all" topic
-            this.mqttClient.publish(
-                `${this.config.mqttTopic}/all`,
-                JSON.stringify(payload)
-            );
+            this.publishToMqtt(topic, payload);
         }
     }
 
     /**
-     * Send AppStart command to MeshCore
+     * Publishes a payload to a MQTT topic
+     * @param topic
+     * @param payload
+     */
+    private publishToMqtt(topic: string, payload: any) {
+        const strPayload = JSON.stringify(payload);
+
+        // Publish to specific topic
+        this.mqttClient.publish(topic, strPayload, { qos: 1 }, (err) => {
+            if (err)
+                this.logger.error({ err, topic }, "Failed to publish to MQTT");
+        });
+
+        // Publish to /all
+        this.mqttClient.publish(
+            `${this.config.mqttTopic}/all`,
+            strPayload,
+            { qos: 1 },
+            (err) => {
+                if (err)
+                    this.logger.error(
+                        { err },
+                        "Failed to publish to /all topic"
+                    );
+            }
+        );
+    }
+
+    /**
+     * Publish errors to the "all" topic
+     * @param error
+     */
+    private publishError(error: any) {
+        this.mqttClient.publish(
+            `${this.config.mqttTopic}/all`,
+            JSON.stringify(error),
+            { qos: 1 },
+            (err) => {
+                if (err)
+                    this.logger.error(
+                        { err },
+                        "Failed to publish error to /all topic"
+                    );
+            }
+        );
+    }
+
+    /**
+     * MeshCore commands
      */
     private sendAppStart() {
         this.logger.info("Sending AppStart command to MeshCore");
-        const appStartCmd = new AppStartCommand();
-        this.transport.sendCommand(appStartCmd);
+        this.transport.sendCommand(new AppStartCommand());
     }
 
-    /**
-     * Send DeviceQuery command to MeshCore
-     */
-    private sendDeviceQuery(): void {
+    private sendDeviceQuery() {
         this.logger.info("Sending DeviceQuery command to MeshCore");
-        const deviceQueryCmd = new DeviceQueryCommand();
-        this.transport.sendCommand(deviceQueryCmd);
+        this.transport.sendCommand(new DeviceQueryCommand());
     }
 
-    /**
-     * Send SyncNextMessage command to MeshCore
-     */
-    private sendSyncNextMessage(): void {
+    private sendSyncNextMessage() {
         this.logger.info("Sending SyncNextMessage command to MeshCore");
-        const syncNextMessageCommand = new SyncNextMessageCommand();
-        this.transport.sendCommand(syncNextMessageCommand);
+        this.transport.sendCommand(new SyncNextMessageCommand());
     }
 
-    /**
-     * Start syncing messages from MeshCore
-     */
-    private startMessageSync(): void {
-        if (this.syncingMessages) {
-            this.logger.debug("Already syncing messages, skipping");
-            return;
-        }
+    private startMessageSync() {
+        if (this.syncingMessages) return;
 
         this.logger.info("Starting message sync");
         this.syncingMessages = true;
+
+        // Add a safety timeout to prevent sync from getting stuck
+        setTimeout(() => {
+            if (this.syncingMessages) {
+                this.logger.warn("Message sync timeout, resetting sync state");
+                this.syncingMessages = false;
+            }
+        }, 30000); // 30s timeout
+
         this.sendSyncNextMessage();
-    }
-
-    /**
-     * Start the bridge and send initial commands
-     */
-    start(): void {
-        this.running = true;
-        this.logger.info("MeshCore to MQTT Bridge started");
-        this.sendAppStart();
-    }
-
-    /**
-     * Stop the bridge
-     */
-    stop(): void {
-        this.running = false;
-        this.mqttClient.end();
-        this.logger.info("Bridge stopped");
     }
 }
