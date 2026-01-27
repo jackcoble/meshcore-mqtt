@@ -1,9 +1,9 @@
-import { CommandCode } from "./enums/command-codes";
-import { ParameterisedCommand } from "./command";
-import { BinaryReader } from ".././utils/binary-reader";
+import { CommandCode } from "../enums/command-codes";
+import { ParameterisedCommand } from "../base/command";
+import { BinaryReader } from "../../utils/binary-reader";
 import * as z from "zod";
-import { ResponseCode } from "./enums/response-codes";
-import { commandRegistry } from "./registry";
+import { ResponseCode } from "../enums/response-codes";
+import { commandRegistry } from "../base/registry";
 
 export interface DeviceInfoResponse {
     code: ResponseCode;

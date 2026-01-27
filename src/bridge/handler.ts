@@ -1,5 +1,5 @@
-import { commandRegistry } from "../commands/registry";
-import { Command, ParameterisedCommand } from "../commands/command";
+import { commandRegistry } from "../commands/base/registry";
+import { Command, ParameterisedCommand } from "../commands/base/command";
 import * as z from "zod";
 
 // Expect a type, and then parameters for the command

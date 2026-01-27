@@ -1,5 +1,5 @@
-import { CommandCode } from "./enums/command-codes";
-import { ResponseCode } from "./enums/response-codes";
+import { CommandCode } from "../enums/command-codes";
+import { ResponseCode } from "../enums/response-codes";
 import * as z from "zod";
 
 /**

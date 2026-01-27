@@ -1,4 +1,4 @@
-import { Command } from "../commands/command";
+import { Command } from "../commands/base/command";
 
 /**
  * Common interface that all transports must implement

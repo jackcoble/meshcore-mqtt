@@ -1,8 +1,8 @@
-import { CommandCode } from "./enums/command-codes";
-import { ResponseCode } from "./enums/response-codes";
-import { Command } from "./command";
-import { BinaryReader } from "../utils/binary-reader";
-import { commandRegistry } from "./registry";
+import { CommandCode } from "../enums/command-codes";
+import { ResponseCode } from "../enums/response-codes";
+import { Command } from "../base/command";
+import { BinaryReader } from "../../utils/binary-reader";
+import { commandRegistry } from "../base/registry";
 
 /**
  * Sync Next Message command

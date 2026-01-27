@@ -1,9 +1,9 @@
-import { CommandCode } from "./enums/command-codes";
-import { ResponseCode } from "./enums/response-codes";
-import { ParameterisedCommand } from "./command";
-import { BinaryReader } from "../utils/binary-reader";
+import { CommandCode } from "../enums/command-codes";
+import { ResponseCode } from "../enums/response-codes";
+import { ParameterisedCommand } from "../base/command";
+import { BinaryReader } from "../../utils/binary-reader";
 import * as z from "zod";
-import { commandRegistry } from "./registry";
+import { commandRegistry } from "../base/registry";
 
 export interface SelfInfoResponse {
     code: number;

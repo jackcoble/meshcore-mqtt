@@ -1,6 +1,6 @@
 import * as net from "net";
 import { FRAME_START_OUTBOUND, FRAME_START_INBOUND } from "../constants";
-import { Command } from "../commands/command";
+import { Command } from "../commands/base/command";
 import { Logger } from "pino";
 import { ITransport, TransportConfig } from "./transport";
 
