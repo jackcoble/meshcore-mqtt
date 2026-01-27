@@ -1,31 +1,71 @@
 import { CommandCode } from "./enums/command-codes";
 import { ResponseCode } from "./enums/response-codes";
-import { Command } from "./command";
+import { ParameterisedCommand } from "./command";
 import { BinaryReader } from "../utils/binary-reader";
+import * as z from "zod";
+import { commandRegistry } from "./registry";
+
+export interface SelfInfoResponse {
+    code: number;
+    type: number;
+    tx_power_dbm: number;
+    max_tx_power: number;
+    public_key: string;
+    adv_lat: number;
+    adv_lon: number;
+    multi_acks: boolean;
+    advert_loc_policy: number;
+    telemetry_modes: number;
+    manual_add_contacts: boolean;
+    radio_freq: number;
+    radio_bw: number;
+    radio_sf: number;
+    radio_cr: number;
+    name: string;
+}
 
 /**
  * App start command
  */
-export class AppStartCommand extends Command {
-    constructor(
-        private appVersion: number = 3,
-        private appName: string = "MeshCore-MQTT-Bridge"
-    ) {
-        super();
-    }
+export class AppStartCommand extends ParameterisedCommand {
+    static readonly type = "app_start";
 
     readonly commandCode = CommandCode.APP_START;
     readonly expectedResponseCodes = [ResponseCode.SELF_INFO];
+
+    readonly commandSchema = z.object({
+        appVersion: z.number().int().min(1).max(3).default(3),
+        appName: z.string().max(30).default("MeshCore-MQTT-Bridge"),
+    });
+
+    private params?: z.infer<typeof this.commandSchema>;
+
+    constructor(
+        appVersion: number = 3,
+        appName: string = "MeshCore-MQTT-Bridge"
+    ) {
+        super();
+        this.params = this.commandSchema.parse({ appVersion, appName });
+    }
+
+    fromJSON(data: unknown): this {
+        this.params = this.commandSchema.parse(data);
+        return this;
+    }
 
     /**
      * Serialize APP_START command to buffer
      * @returns {Buffer} The serialized command buffer
      */
     toBuffer(): Buffer {
+        if (!this.params) {
+            throw new Error("Command not initialized - call fromJSON first");
+        }
+
         return Buffer.concat([
-            Buffer.from([CommandCode.APP_START, this.appVersion]),
+            Buffer.from([CommandCode.APP_START, this.params.appVersion]),
             Buffer.alloc(6), // reserved
-            Buffer.from(this.appName, "utf8"),
+            Buffer.from(this.params.appName, "utf8"),
         ]);
     }
 
@@ -34,7 +74,7 @@ export class AppStartCommand extends Command {
      * @param data
      * @returns {object} Parsed SELF_INFO data
      */
-    fromBuffer(data: Buffer): object {
+    fromBuffer(data: Buffer): SelfInfoResponse {
         const r = new BinaryReader(data);
 
         const code = r.u8();
@@ -80,3 +120,5 @@ export class AppStartCommand extends Command {
         };
     }
 }
+
+commandRegistry.register(AppStartCommand);

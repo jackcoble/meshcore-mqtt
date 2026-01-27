@@ -1,57 +1,84 @@
 import { CommandCode } from "./enums/command-codes";
+import { ParameterisedCommand } from "./command";
+import { BinaryReader } from ".././utils/binary-reader";
+import * as z from "zod";
 import { ResponseCode } from "./enums/response-codes";
-import { Command } from "./command";
-import { BinaryReader } from "../utils/binary-reader";
+import { commandRegistry } from "./registry";
+
+export interface DeviceInfoResponse {
+    code: ResponseCode;
+    firmware_ver: number;
+    max_contacts_div_2: number;
+    max_channels: number;
+    ble_pin: number;
+    firmware_build_date: string;
+    manufacturer_model: string;
+    semantic_version: string;
+}
 
 /**
  * Device Query command
+ * Should be first command app sends after establishing connection.
+ * Queries device for firmware version, capabilities, and hardware info.
  */
-export class DeviceQueryCommand extends Command {
-    constructor(private appVersion: number = 3) {
-        super();
-    }
+export class DeviceQueryCommand extends ParameterisedCommand {
+    static readonly type = "device_query";
 
     readonly commandCode = CommandCode.DEVICE_QUERY;
     readonly expectedResponseCodes = [ResponseCode.DEVICE_INFO];
+
+    readonly commandSchema = z.object({
+        appTargetVer: z.number().int().min(1).max(255).default(3),
+    });
+
+    private params?: z.infer<typeof this.commandSchema>;
+
+    constructor(appTargetVer: number = 3) {
+        super();
+        this.params = this.commandSchema.parse({ appTargetVer });
+    }
+
+    fromJSON(data: unknown): this {
+        this.params = this.commandSchema.parse(data);
+        return this;
+    }
 
     /**
      * Serialize DEVICE_QUERY command to buffer
      * @returns {Buffer} The serialized command buffer
      */
     toBuffer(): Buffer {
-        return Buffer.concat([
-            Buffer.from([CommandCode.DEVICE_QUERY, this.appVersion]),
+        if (!this.params) {
+            throw new Error("Command not initialized - call fromJSON first");
+        }
+
+        return Buffer.from([
+            CommandCode.DEVICE_QUERY,
+            this.params.appTargetVer,
         ]);
     }
 
     /**
      * Parse DEVICE_INFO response from buffer
-     * @param data
-     * @returns {object} Parsed DEVICE_INFO data
+     * @param data - Response buffer from device
+     * @returns Parsed device info
      */
-    fromBuffer(data: Buffer): object {
+    fromBuffer(data: Buffer): DeviceInfoResponse {
         const r = new BinaryReader(data);
-
         const code = r.u8();
         this.validateResponseCode(code);
 
-        const firmwarVersion = r.u8();
-        const maxContactsDiv2 = r.u8();
-        const maxChannels = r.u8();
-        const blePin = r.u32le();
-        const firmwareBuildDate = r.asciiChars(12);
-        const manufacturerModel = r.asciiChars(40);
-        const semanticVersion = r.asciiChars(20);
-
         return {
-            code: ResponseCode.DEVICE_INFO,
-            firmware_ver: firmwarVersion,
-            max_contacts_div2: maxContactsDiv2,
-            max_channels: maxChannels,
-            ble_pin: blePin,
-            firmware_build_date: firmwareBuildDate,
-            manufacturer_model: manufacturerModel,
-            semantic_version: semanticVersion,
+            code,
+            firmware_ver: r.u8(),
+            max_contacts_div_2: r.u8(),
+            max_channels: r.u8(),
+            ble_pin: r.u32le(),
+            firmware_build_date: r.asciiChars(12),
+            manufacturer_model: r.asciiChars(40),
+            semantic_version: r.asciiChars(20),
         };
     }
 }
+
+commandRegistry.register(DeviceQueryCommand);

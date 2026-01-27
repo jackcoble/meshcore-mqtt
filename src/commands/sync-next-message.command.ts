@@ -2,11 +2,14 @@ import { CommandCode } from "./enums/command-codes";
 import { ResponseCode } from "./enums/response-codes";
 import { Command } from "./command";
 import { BinaryReader } from "../utils/binary-reader";
+import { commandRegistry } from "./registry";
 
 /**
  * Sync Next Message command
  */
 export class SyncNextMessageCommand extends Command {
+    static readonly type = "sync_next_message";
+
     readonly commandCode = CommandCode.SYNC_NEXT_MESSAGE;
     readonly expectedResponseCodes = [
         ResponseCode.NO_MORE_MESSAGES,
@@ -133,3 +136,5 @@ export class SyncNextMessageCommand extends Command {
         }
     }
 }
+
+commandRegistry.register(SyncNextMessageCommand);
