@@ -11,15 +11,16 @@ The MeshCore to MQTT Bridge requires you have a device that is flashed with the 
 
 ### Response Codes
 
-| Message Type          | Status | MQTT Topic                               |
-| --------------------- | ------ | ---------------------------------------- |
-| `SELF_INFO`           | ✅     | `{topic}/self_info`                      |
-| `DEVICE_INFO`         | ✅     | `{topic}/device_info`                    |
-| `CONTACT_MSG_RECV`    | ✅     | `{topic}/message/direct/{pubkey_prefix}` |
-| `CHANNEL_MSG_RECV`    | ✅     | `{topic}/message/channel/{channel_idx}`  |
-| `CONTACT_MSG_RECV_V3` | ✅     | `{topic}/message/direct/{pubkey_prefix}` |
-| `CHANNEL_MSG_RECV_V3` | ✅     | `{topic}/message/channel/{channel_idx}`  |
-| `NO_MORE_MESSAGES`    | ✅     | -                                        |
+| Message Type          | Description                                           | Status | MQTT Topic                               |
+| --------------------- | ----------------------------------------------------- | ------ | ---------------------------------------- |
+| `SELF_INFO`           | Info about the connected node                         | ✅     | `{topic}/self_info`                      |
+| `DEVICE_INFO`         | Device info about the connected node                  | ✅     | `{topic}/device_info`                    |
+| `CONTACT_MSG_RECV`    | Contact message (direct)                              | ✅     | `{topic}/message/direct/{pubkey_prefix}` |
+| `CHANNEL_MSG_RECV`    | Channel message                                       | ✅     | `{topic}/message/channel/{channel_idx}`  |
+| `CONTACT_MSG_RECV_V3` | Contact message (direct)                              | ✅     | `{topic}/message/direct/{pubkey_prefix}` |
+| `CHANNEL_MSG_RECV_V3` | Channel message                                       | ✅     | `{topic}/message/channel/{channel_idx}`  |
+| `NO_MORE_MESSAGES`    | All messages have been synced                         | ✅     | -                                        |
+| `BATT_AND_STORAGE`    | Battery and storage information of the connected node | ❌     | `{topic}/battery_and_storage`            |
 
 ### Push Notification Codes
 
