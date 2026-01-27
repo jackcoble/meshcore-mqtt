@@ -30,6 +30,14 @@ export class AppStartCommand extends Command {
     }
 
     /**
+     * Parses incoming an incoming JSON command, ready for transmission to the radio
+     * @param data - JSON command
+     */
+    fromJSON(data: string): Buffer {
+        throw new Error(`${this.commandCode} cannot be parsed.`);
+    }
+
+    /**
      * Parse SELF_INFO response from buffer
      * @param data
      * @returns {object} Parsed SELF_INFO data

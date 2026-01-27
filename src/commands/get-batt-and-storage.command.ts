@@ -23,6 +23,14 @@ export class GetBatteryAndStorageCommand extends Command {
     }
 
     /**
+     * Parses incoming an incoming JSON command, ready for transmission to the radio
+     * @param data - JSON command
+     */
+    fromJSON(data: string): Buffer {
+        throw new Error(`${this.commandCode} cannot be parsed.`);
+    }
+
+    /**
      * Parse BATT_AND_STORAGE response from buffer
      * @param data
      * @returns {object} Parsed BATT_AND_STORAGE data
