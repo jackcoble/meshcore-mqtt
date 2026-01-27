@@ -7,33 +7,114 @@
 
 The MeshCore to MQTT Bridge requires you have a device that is flashed with the **Companion USB**, or connected to Wi-Fi.
 
-## Message Type Support
+## MQTT Topics
 
-### Response Codes
+### Published Topics (Device → MQTT)
 
-| Message Type          | Description                                           | Status | MQTT Topic                               |
-| --------------------- | ----------------------------------------------------- | ------ | ---------------------------------------- |
-| `SELF_INFO`           | Info about the connected node                         | ✅     | `{topic}/self_info`                      |
-| `DEVICE_INFO`         | Device info about the connected node                  | ✅     | `{topic}/device_info`                    |
-| `CONTACT_MSG_RECV`    | Contact message (direct)                              | ✅     | `{topic}/message/direct/{pubkey_prefix}` |
-| `CHANNEL_MSG_RECV`    | Channel message                                       | ✅     | `{topic}/message/channel/{channel_idx}`  |
-| `CONTACT_MSG_RECV_V3` | Contact message (direct)                              | ✅     | `{topic}/message/direct/{pubkey_prefix}` |
-| `CHANNEL_MSG_RECV_V3` | Channel message                                       | ✅     | `{topic}/message/channel/{channel_idx}`  |
-| `NO_MORE_MESSAGES`    | All messages have been synced                         | ✅     | -                                        |
-| `BATT_AND_STORAGE`    | Battery and storage information of the connected node | ✅     | `{topic}/battery_and_storage`            |
+| Topic                                   | Description                           |
+| --------------------------------------- | ------------------------------------- |
+| `{topic}/self_info`                     | Device self-information at startup    |
+| `{topic}/device_info`                   | Device capabilities and hardware info |
+| `{topic}/battery_and_storage`           | Battery voltage and storage usage     |
+| `{topic}/message/direct/{pubkey_prefix}`| Direct messages from other devices    |
+| `{topic}/message/channel/{channel_idx}` | Channel broadcast messages            |
+| `{topic}/all`                           | All messages (copy of all above)      |
 
-### Push Notification Codes
+### Subscribed Topics (MQTT → Device)
 
-| Push Notification Code | Status | Description                     |
-| ---------------------- | ------ | ------------------------------- |
-| `MSG_WAITING`          | ✅     | Triggers automatic message sync |
+| Topic             | Description                                                  |
+| ----------------- | ------------------------------------------------------------ |
+| `{topic}/command` | Send commands to the device (JSON format, see Commands below)|
 
 > [!NOTE]
->
-> - All received messages are also published to `{topic}/all` in addition to their specific topics
-> - `{topic}` is the configurable MQTT topic prefix (default: `meshcore`)
-> - Direct messages (path_len = -1) are published to `{topic}/message/direct/{pubkey_prefix}`
-> - Channel messages are published to `{topic}/message/channel/{channel_idx}`
+> `{topic}` is the configurable MQTT topic prefix (default: `meshcore`)
+
+## Commands
+
+Commands are sent to `{topic}/command` as JSON with the format: `{ "type": "<command_type>", "params": {...} }`
+
+### Device Commands
+
+#### `app_start`
+
+Initialize connection with device. Sent automatically on bridge startup.
+
+| Parameter    | Type   | Default                | Description          |
+| ------------ | ------ | ---------------------- | -------------------- |
+| `appVersion` | number | `3`                    | App protocol version |
+| `appName`    | string | `"MeshCore-MQTT-Bridge"` | App name (max 30 chars) |
+
+**Response:** Publishes to `{topic}/self_info`
+
+#### `device_query`
+
+Query device firmware version and capabilities.
+
+| Parameter      | Type   | Default | Description        |
+| -------------- | ------ | ------- | ------------------ |
+| `appTargetVer` | number | `3`     | Target app version |
+
+**Response:** Publishes to `{topic}/device_info`
+
+#### `get_battery_and_storage`
+
+Query battery voltage and storage usage. No parameters required.
+
+```json
+{ "type": "get_battery_and_storage" }
+```
+
+**Response:** Publishes to `{topic}/battery_and_storage`
+
+### Messaging Commands
+
+#### `send_channel_text_message`
+
+Send a text message to a channel.
+
+| Parameter         | Type   | Default           | Description                    |
+| ----------------- | ------ | ----------------- | ------------------------------ |
+| `text`            | string | (required)        | Message text (max 160 chars)   |
+| `channelIdx`      | number | `0`               | Channel index (0 = Public)     |
+| `txtType`         | number | `0`               | Text type (0 = PLAIN)          |
+| `senderTimestamp` | number | current timestamp | Unix timestamp in seconds      |
+
+**Example:**
+
+```json
+{ "type": "send_channel_text_message", "params": { "text": "Hello mesh!" } }
+```
+
+**Response:** Returns OK or ERR
+
+#### `sync_next_message`
+
+Retrieve the next pending message from the device. Triggered automatically when `MSG_WAITING` is received.
+
+```json
+{ "type": "sync_next_message" }
+```
+
+**Response:** Publishes to `{topic}/message/direct/{pubkey_prefix}` or `{topic}/message/channel/{channel_idx}`
+
+## Response Codes
+
+| Response Code         | Description                                           | MQTT Topic                               |
+| --------------------- | ----------------------------------------------------- | ---------------------------------------- |
+| `SELF_INFO`           | Info about the connected node                         | `{topic}/self_info`                      |
+| `DEVICE_INFO`         | Device info about the connected node                  | `{topic}/device_info`                    |
+| `CONTACT_MSG_RECV`    | Contact message (direct)                              | `{topic}/message/direct/{pubkey_prefix}` |
+| `CHANNEL_MSG_RECV`    | Channel message                                       | `{topic}/message/channel/{channel_idx}`  |
+| `CONTACT_MSG_RECV_V3` | Contact message (direct, v3)                          | `{topic}/message/direct/{pubkey_prefix}` |
+| `CHANNEL_MSG_RECV_V3` | Channel message (v3)                                  | `{topic}/message/channel/{channel_idx}`  |
+| `NO_MORE_MESSAGES`    | All messages have been synced                         | -                                        |
+| `BATT_AND_STORAGE`    | Battery and storage information of the connected node | `{topic}/battery_and_storage`            |
+
+## Push Notification Codes
+
+| Push Notification Code | Description                     |
+| ---------------------- | ------------------------------- |
+| `MSG_WAITING`          | Triggers automatic message sync |
 
 ## Installation (local)
 
