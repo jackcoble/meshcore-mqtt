@@ -10,6 +10,7 @@ import {
 } from "../commands";
 import { PushCode } from "../constants";
 import { Config } from "../config";
+import { createCommandFromMessage } from "./handler";
 
 /**
  * Bridge between MeshCore serial interface and MQTT.
@@ -28,6 +29,65 @@ export class MeshCoreBridge {
         private logger: Logger
     ) {
         this.transport.onFrame((data) => this.handleFrame(data));
+        this.setupMqttSubscriptions();
+    }
+
+    /**
+     * Setup MQTT subscriptions for incoming commands
+     */
+    private setupMqttSubscriptions(): void {
+        const commandTopic = `${this.config.mqttTopic}/command`;
+
+        this.mqttClient.subscribe(commandTopic, { qos: 1 }, (err) => {
+            if (err) {
+                this.logger.error(
+                    { err, topic: commandTopic },
+                    "Failed to subscribe to command topic"
+                );
+            } else {
+                this.logger.info(
+                    { topic: commandTopic },
+                    "Subscribed to command topic"
+                );
+            }
+        });
+
+        this.mqttClient.on("message", (topic, message) => {
+            if (topic === commandTopic) {
+                this.handleIncomingCommand(message);
+            }
+        });
+    }
+
+    /**
+     * Handle incoming command from MQTT
+     * @param message Buffer containing the JSON command
+     */
+    private handleIncomingCommand(message: Buffer): void {
+        try {
+            const json = JSON.parse(message.toString());
+            this.logger.debug({ json }, "Received command from MQTT");
+
+            const command = createCommandFromMessage(json);
+            this.logger.info({ type: json.type }, "Sending command to device");
+
+            this.transport.sendCommand(command);
+        } catch (err) {
+            const errorMessage =
+                err instanceof Error ? err.message : String(err);
+            this.logger.error(
+                { err, message: message.toString() },
+                "Failed to process incoming command"
+            );
+
+            const response = JSON.stringify({
+                success: false,
+                error: errorMessage,
+            });
+
+            const allTopic = `${this.config.mqttTopic}/all`;
+            this.mqttClient.publish(allTopic, response);
+        }
     }
 
     /**
