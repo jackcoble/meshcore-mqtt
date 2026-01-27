@@ -6,3 +6,4 @@ export * from "./enums/response-codes";
 export * from "./app-start.command";
 export * from "./device-query.command";
 export * from "./sync-next-message.command";
+export * from "./get-batt-and-storage.command";
