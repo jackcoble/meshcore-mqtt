@@ -32,6 +32,138 @@ describe("SyncNextMessageCommand", () => {
         });
     });
 
+    describe("isDirectMessage", () => {
+        it("should return true for CONTACT_MSG_RECV", () => {
+            const buffer = Buffer.concat([
+                Buffer.from([ResponseCode.CONTACT_MSG_RECV]),
+                Buffer.from([0x01, 0x02, 0x03, 0x04, 0x05, 0x06]), // pubkey prefix
+                Buffer.from([0x01]), // path_len
+                Buffer.from([0x01]), // txt_type
+                Buffer.alloc(4), // timestamp
+                Buffer.from("test", "utf8"),
+            ]);
+
+            command.fromBuffer(buffer);
+
+            expect(command.isDirectMessage()).toBe(true);
+        });
+
+        it("should return true for CONTACT_MSG_RECV_V3", () => {
+            const buffer = Buffer.concat([
+                Buffer.from([ResponseCode.CONTACT_MSG_RECV_V3]),
+                Buffer.from([0x28]), // snr
+                Buffer.from([0x00, 0x00]), // reserved
+                Buffer.from([0x01, 0x02, 0x03, 0x04, 0x05, 0x06]), // pubkey prefix
+                Buffer.from([0x01]), // path_len
+                Buffer.from([0x01]), // txt_type
+                Buffer.alloc(4), // timestamp
+                Buffer.from("test", "utf8"),
+            ]);
+
+            command.fromBuffer(buffer);
+
+            expect(command.isDirectMessage()).toBe(true);
+        });
+
+        it("should return false for CHANNEL_MSG_RECV", () => {
+            const buffer = Buffer.concat([
+                Buffer.from([ResponseCode.CHANNEL_MSG_RECV]),
+                Buffer.from([0x01]), // channel_idx
+                Buffer.from([0x01]), // path_len
+                Buffer.from([0x01]), // txt_type
+                Buffer.alloc(4), // timestamp
+                Buffer.from("test", "utf8"),
+            ]);
+
+            command.fromBuffer(buffer);
+
+            expect(command.isDirectMessage()).toBe(false);
+        });
+
+        it("should return false for CHANNEL_MSG_RECV_V3", () => {
+            const buffer = Buffer.concat([
+                Buffer.from([ResponseCode.CHANNEL_MSG_RECV_V3]),
+                Buffer.from([0x28]), // snr
+                Buffer.from([0x00, 0x00]), // reserved
+                Buffer.from([0x01]), // channel_idx
+                Buffer.from([0x01]), // path_len
+                Buffer.from([0x01]), // txt_type
+                Buffer.alloc(4), // timestamp
+                Buffer.from("test", "utf8"),
+            ]);
+
+            command.fromBuffer(buffer);
+
+            expect(command.isDirectMessage()).toBe(false);
+        });
+    });
+
+    describe("isChannelMessage", () => {
+        it("should return true for CHANNEL_MSG_RECV", () => {
+            const buffer = Buffer.concat([
+                Buffer.from([ResponseCode.CHANNEL_MSG_RECV]),
+                Buffer.from([0x01]), // channel_idx
+                Buffer.from([0x01]), // path_len
+                Buffer.from([0x01]), // txt_type
+                Buffer.alloc(4), // timestamp
+                Buffer.from("test", "utf8"),
+            ]);
+
+            command.fromBuffer(buffer);
+
+            expect(command.isChannelMessage()).toBe(true);
+        });
+
+        it("should return true for CHANNEL_MSG_RECV_V3", () => {
+            const buffer = Buffer.concat([
+                Buffer.from([ResponseCode.CHANNEL_MSG_RECV_V3]),
+                Buffer.from([0x28]), // snr
+                Buffer.from([0x00, 0x00]), // reserved
+                Buffer.from([0x01]), // channel_idx
+                Buffer.from([0x01]), // path_len
+                Buffer.from([0x01]), // txt_type
+                Buffer.alloc(4), // timestamp
+                Buffer.from("test", "utf8"),
+            ]);
+
+            command.fromBuffer(buffer);
+
+            expect(command.isChannelMessage()).toBe(true);
+        });
+
+        it("should return false for CONTACT_MSG_RECV", () => {
+            const buffer = Buffer.concat([
+                Buffer.from([ResponseCode.CONTACT_MSG_RECV]),
+                Buffer.from([0x01, 0x02, 0x03, 0x04, 0x05, 0x06]), // pubkey prefix
+                Buffer.from([0x01]), // path_len
+                Buffer.from([0x01]), // txt_type
+                Buffer.alloc(4), // timestamp
+                Buffer.from("test", "utf8"),
+            ]);
+
+            command.fromBuffer(buffer);
+
+            expect(command.isChannelMessage()).toBe(false);
+        });
+
+        it("should return false for CONTACT_MSG_RECV_V3", () => {
+            const buffer = Buffer.concat([
+                Buffer.from([ResponseCode.CONTACT_MSG_RECV_V3]),
+                Buffer.from([0x28]), // snr
+                Buffer.from([0x00, 0x00]), // reserved
+                Buffer.from([0x01, 0x02, 0x03, 0x04, 0x05, 0x06]), // pubkey prefix
+                Buffer.from([0x01]), // path_len
+                Buffer.from([0x01]), // txt_type
+                Buffer.alloc(4), // timestamp
+                Buffer.from("test", "utf8"),
+            ]);
+
+            command.fromBuffer(buffer);
+
+            expect(command.isChannelMessage()).toBe(false);
+        });
+    });
+
     describe("toBuffer", () => {
         it("should serialise to correct buffer format", () => {
             const buffer = command.toBuffer();
@@ -262,6 +394,34 @@ describe("SyncNextMessageCommand", () => {
                     txt_type: txtType,
                     sender_timestamp: senderTimestamp,
                     text: text,
+                });
+            });
+
+            it("should handle path_len of 0xff as -1 (direct message)", () => {
+                const snrRaw = 40;
+                const channelIdx = 2;
+                const pathLen = 0xff;
+                const txtType = 1;
+                const senderTimestamp = 1769465771;
+                const text = "Test";
+
+                const buffer = Buffer.concat([
+                    Buffer.from([ResponseCode.CHANNEL_MSG_RECV_V3]),
+                    Buffer.from([snrRaw]),
+                    Buffer.from([0x00, 0x00]),
+                    Buffer.from([channelIdx]),
+                    Buffer.from([pathLen]),
+                    Buffer.from([txtType]),
+                    Buffer.alloc(4),
+                    Buffer.from(text, "utf8"),
+                ]);
+
+                buffer.writeUInt32LE(senderTimestamp, 7);
+
+                const result = command.fromBuffer(buffer);
+
+                expect(result).toMatchObject({
+                    path_len: -1,
                 });
             });
 
