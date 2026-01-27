@@ -1,5 +1,5 @@
 import mqtt from "mqtt";
-import { ITransport } from "./transports/transport";
+import { ITransport } from "../transports/transport";
 import { Logger } from "pino";
 import {
     AppStartCommand,
@@ -7,9 +7,9 @@ import {
     GetBatteryAndStorageCommand,
     ResponseCode,
     SyncNextMessageCommand,
-} from "./commands";
-import { PushCode } from "./constants";
-import { Config } from "./config";
+} from "../commands";
+import { PushCode } from "../constants";
+import { Config } from "../config";
 
 /**
  * Bridge between MeshCore serial interface and MQTT.
