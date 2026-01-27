@@ -20,7 +20,7 @@ The MeshCore to MQTT Bridge requires you have a device that is flashed with the 
 | `CONTACT_MSG_RECV_V3` | Contact message (direct)                              | ✅     | `{topic}/message/direct/{pubkey_prefix}` |
 | `CHANNEL_MSG_RECV_V3` | Channel message                                       | ✅     | `{topic}/message/channel/{channel_idx}`  |
 | `NO_MORE_MESSAGES`    | All messages have been synced                         | ✅     | -                                        |
-| `BATT_AND_STORAGE`    | Battery and storage information of the connected node | ❌     | `{topic}/battery_and_storage`            |
+| `BATT_AND_STORAGE`    | Battery and storage information of the connected node | ✅     | `{topic}/battery_and_storage`            |
 
 ### Push Notification Codes
 
