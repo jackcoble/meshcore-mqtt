@@ -4,6 +4,7 @@ import { Logger } from "pino";
 import {
     AppStartCommand,
     DeviceQueryCommand,
+    GetBatteryAndStorageCommand,
     ResponseCode,
     SyncNextMessageCommand,
 } from "./commands";
@@ -130,6 +131,19 @@ export class MeshCoreBridge {
                 this.logger.info("Received NO_MORE_MESSAGES from MeshCore");
                 this.syncingMessages = false;
                 this.logger.info("Message sync completed");
+                break;
+
+            case ResponseCode.BATT_AND_STORAGE:
+                this.logger.info(
+                    "Received BATT_AND_STORAGE response from MeshCore"
+                );
+
+                const batteryAndStorage = new GetBatteryAndStorageCommand();
+                const response = batteryAndStorage.fromBuffer(data);
+
+                topic = `${this.config.mqttTopic}/battery_and_storage`;
+                payload = response;
+
                 break;
 
             // Push Codes - can be pushed to the App (this bridge) at any time
