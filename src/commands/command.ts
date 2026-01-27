@@ -6,6 +6,9 @@ import * as z from "zod";
  * Abstract base class for commands sent to the MeshCore device.
  */
 export abstract class Command {
+    // Identifier for the command: e.g. "device_query"
+    static readonly type: string;
+
     abstract readonly commandCode: CommandCode;
     abstract readonly expectedResponseCodes: ResponseCode[];
 
@@ -46,6 +49,8 @@ export abstract class ParameterisedCommand extends Command {
      * Validates command parameters and stores them in a Command instance
      * ready for transmission
      * @param data
+     * @returns {this}
+     * @throws {z.ZodError} - Validation failed
      */
     abstract fromJSON(data: unknown): this;
 }
