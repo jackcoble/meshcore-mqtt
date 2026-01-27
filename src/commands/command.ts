@@ -1,5 +1,7 @@
 import { CommandCode } from "./enums/command-codes";
 import { ResponseCode } from "./enums/response-codes";
+import * as z from "zod";
+
 /**
  * Abstract base class for commands sent to the MeshCore device.
  */
@@ -32,4 +34,18 @@ export abstract class Command {
             );
         }
     }
+}
+
+/**
+ * Abstract class for Parameterised Commands (incoming via MQTT)
+ */
+export abstract class ParameterisedCommand extends Command {
+    abstract readonly commandSchema: z.ZodType | null;
+
+    /**
+     * Validates command parameters and stores them in a Command instance
+     * ready for transmission
+     * @param data
+     */
+    abstract fromJSON(data: unknown): this;
 }
