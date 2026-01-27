@@ -28,6 +28,20 @@ describe("BinaryReader", () => {
         expect(reader.u32le()).toBe(0xffffffff);
     });
 
+    it("should read u16le", () => {
+        const buf = Buffer.from([
+            0x34,
+            0x12, // 0x1234 = 4660
+            0xff,
+            0x00, // 0x00ff = 255
+        ]);
+
+        const reader = new BinaryReader(buf);
+
+        expect(reader.u16le()).toBe(0x1234);
+        expect(reader.u16le()).toBe(0x00ff);
+    });
+
     it("should read bytes", () => {
         const buf = Buffer.from([0x01, 0x02, 0x03, 0x04, 0x05]);
         const reader = new BinaryReader(buf);

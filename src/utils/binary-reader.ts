@@ -35,6 +35,16 @@ export class BinaryReader {
     }
 
     /**
+     * Read an unsigned 16-bit little-endian integer (2 bytes)
+     * @returns
+     */
+    u16le(): number {
+        const v = this.buf.readUInt16LE(this.offset);
+        this.offset += 2;
+        return v;
+    }
+
+    /**
      * Read a byte array of specified length
      * @param len Length of the byte array to read
      * @returns {Buffer} The read byte array
