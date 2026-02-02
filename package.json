@@ -1,6 +1,6 @@
 {
     "name": "meshcore-mqtt",
-    "version": "0.1.0",
+    "version": "0.2.0",
     "description": "Broadcast MeshCore data over MQTT",
     "main": "dist/index.js",
     "scripts": {
