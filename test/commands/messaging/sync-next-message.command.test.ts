@@ -240,6 +240,24 @@ describe("SyncNextMessageCommand", () => {
             expect(result.text).toBe("V3 contact msg");
         });
 
+        it("should handle direct path (0xff) as -1", () => {
+            const command = new SyncNextMessageCommand();
+
+            const buffer = Buffer.alloc(20);
+            buffer.writeUInt8(ResponseCode.CONTACT_MSG_RECV_V3, 0);
+            buffer.writeUInt8(0, 1); // SNR
+            buffer.writeUInt8(0, 2); // reserved
+            buffer.writeUInt8(0, 3); // reserved
+            Buffer.alloc(6).copy(buffer, 4); // pubkey prefix
+            buffer.writeUInt8(0xff, 10); // DIRECT_PATH_LEN
+            buffer.writeUInt8(0, 11); // txtType
+            buffer.writeUInt32LE(0, 12); // senderTimestamp
+
+            const result = command.fromBuffer(buffer) as { path_len: number };
+
+            expect(result.path_len).toBe(-1);
+        });
+
         it("should handle fractional SNR values", () => {
             const command = new SyncNextMessageCommand();
 
