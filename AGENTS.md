@@ -14,3 +14,4 @@ This document provides guidelines for AI coding agents working in the `meshcore-
 - Tests can be run by executing: `pnpm test`. The commit should pass all tests before its ready for review.
 - Fix any tests or typing issues until the whole test suite passes.
 - Always add or update tests for the code you change, there should be no exceptions.
+- Tests should be simple to understand, and achieve highest coverage possible.
