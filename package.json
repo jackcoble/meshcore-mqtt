@@ -8,9 +8,14 @@
         "build": "tsc",
         "test": "vitest"
     },
-    "keywords": [],
-    "author": "Jack Coble <hello@jackcoble.dev>",
-    "license": "ISC",
+    "keywords": [
+        "mqtt",
+        "iot",
+        "bridge",
+        "meshcore"
+    ],
+    "author": "Jack Coble <jack@coble.uk>",
+    "license": "AGPL-3.0-only",
     "packageManager": "pnpm@10.28.1",
     "devDependencies": {
         "@types/node": "^25.0.9",
