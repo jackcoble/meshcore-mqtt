@@ -1,6 +1,6 @@
 {
     "name": "meshcore-mqtt",
-    "version": "0.1.0",
+    "version": "0.2.0",
     "description": "Broadcast MeshCore data over MQTT",
     "main": "dist/index.js",
     "scripts": {
@@ -8,9 +8,14 @@
         "build": "tsc",
         "test": "vitest"
     },
-    "keywords": [],
-    "author": "Jack Coble <hello@jackcoble.dev>",
-    "license": "ISC",
+    "keywords": [
+        "mqtt",
+        "iot",
+        "bridge",
+        "meshcore"
+    ],
+    "author": "Jack Coble <jack@coble.uk>",
+    "license": "AGPL-3.0-only",
     "packageManager": "pnpm@10.28.1",
     "devDependencies": {
         "@types/node": "^25.0.9",
@@ -18,6 +23,7 @@
         "prettier": "^3.8.1",
         "tsx": "^4.21.0",
         "typescript": "^5.9.3",
+        "vite-tsconfig-paths": "^6.0.5",
         "vitest": "^4.0.17"
     },
     "dependencies": {

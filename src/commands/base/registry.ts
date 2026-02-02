@@ -5,7 +5,7 @@ export type CommandClass = new (...args: any[]) => Command;
 /**
  * Maintains a "registry" of Commands that can be used for MQTT -> Radio communication
  */
-class CommandRegistry {
+export class CommandRegistry {
     private commands = new Map<string, CommandClass>();
 
     register(commandClass: CommandClass): void {
