@@ -62,6 +62,7 @@ Options:
   --mqtt-port <port>               MQTT broker port
   --mqtt-user <user>               MQTT username
   --mqtt-pass <password>           MQTT password
+  --mqtt-client-id <id>           MQTT client ID (default: "meshcore_bridge")
   --mqtt-topic <topic>             MQTT topic prefix
   --debug                          Enable debug logging
 ```
@@ -93,6 +94,7 @@ Create a `config.json` file in the project root (or specify a custom path with `
     "mqttPort": 1883,
     "mqttUser": "user",
     "mqttPass": "password",
+    "mqttClientId": "meshcore_bridge",
     "mqttTopic": "meshcore",
     "debug": false
 }
@@ -125,6 +127,7 @@ Create a `config.json` file in the project root (or specify a custom path with `
     "mqttPort": 1883,
     "mqttUser": "user",
     "mqttPass": "password",
+    "mqttClientId": "meshcore_bridge",
     "mqttTopic": "meshcore",
     "debug": false
 }
@@ -150,6 +153,7 @@ $ pnpm start
 | `MESHCORE_MQTT_PORT`       | MQTT broker port             | `1883`                |
 | `MESHCORE_MQTT_USER`       | MQTT username                | -                     |
 | `MESHCORE_MQTT_PASS`       | MQTT password                | -                     |
+| `MESHCORE_MQTT_CLIENT_ID`  | MQTT client ID               | `meshcore_bridge`     |
 | `MESHCORE_MQTT_TOPIC`      | MQTT topic prefix            | `meshcore`            |
 | `MESHCORE_DEBUG`           | Enable debug logging         | `false`               |
 

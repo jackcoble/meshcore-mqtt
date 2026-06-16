@@ -64,12 +64,14 @@ describe("Config Loader", () => {
             process.env.MESHCORE_MQTT_BROKER = "mqtt://broker";
             process.env.MESHCORE_MQTT_USER = "user";
             process.env.MESHCORE_MQTT_PASS = "pass";
+            process.env.MESHCORE_MQTT_CLIENT_ID = "my-client";
             process.env.MESHCORE_MQTT_TOPIC = "test/topic";
             const config = loadEnvConfig();
             expect(config.tcpHost).toBe("192.168.1.1");
             expect(config.mqttBroker).toBe("mqtt://broker");
             expect(config.mqttUser).toBe("user");
             expect(config.mqttPass).toBe("pass");
+            expect(config.mqttClientId).toBe("my-client");
             expect(config.mqttTopic).toBe("test/topic");
         });
 
@@ -106,6 +108,7 @@ describe("Config Loader", () => {
                 port: "/dev/ttyUSB0",
                 baudrate: 115200,
                 mqttBroker: "mqtt://broker",
+                mqttClientId: "my-bridge",
                 mqttTopic: "test",
                 debug: true,
             };
@@ -116,6 +119,7 @@ describe("Config Loader", () => {
             expect(config.port).toBe("/dev/ttyUSB0");
             expect(config.baudrate).toBe(115200);
             expect(config.mqttBroker).toBe("mqtt://broker");
+            expect(config.mqttClientId).toBe("my-bridge");
             expect(config.mqttTopic).toBe("test");
             expect(config.debug).toBe(true);
         });
@@ -303,6 +307,16 @@ describe("Config Loader", () => {
                 mqttBroker: "mqtt://broker",
             });
             expect(config).toBeDefined();
+        });
+
+        it("should pass through mqttClientId from CLI options", () => {
+            const config = loadConfig({
+                connectionType: "serial",
+                port: "/dev/ttyUSB0",
+                mqttBroker: "mqtt://broker",
+                mqttClientId: "cli-client",
+            });
+            expect(config.mqttClientId).toBe("cli-client");
         });
 
         it("should use MESHCORE_CONFIG env var for config path", () => {

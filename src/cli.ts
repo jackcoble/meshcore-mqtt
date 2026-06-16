@@ -20,6 +20,7 @@ program
     .option("--mqtt-port <port>", "MQTT broker port")
     .option("--mqtt-user <user>", "MQTT username")
     .option("--mqtt-pass <password>", "MQTT password")
+    .option("--mqtt-client-id <id>", "MQTT client ID")
     .option("--mqtt-topic <topic>", "MQTT topic prefix")
     .option("--debug", "Enable debug logging")
     .parse(process.argv);

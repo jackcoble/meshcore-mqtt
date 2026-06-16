@@ -26,6 +26,7 @@ export interface Config {
     mqttPort: number;
     mqttUser?: string;
     mqttPass?: string;
+    mqttClientId?: string;
     mqttTopic: string;
     debug: boolean;
 

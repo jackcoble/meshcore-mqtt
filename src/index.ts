@@ -17,7 +17,7 @@ import type { ITransport } from "./transports/transport";
 
     const mqttUrl = `mqtt://${config.mqttBroker}:${config.mqttPort}`;
     const mqttOptions: mqtt.IClientOptions = {
-        clientId: "meshcore_bridge",
+        clientId: config.mqttClientId ?? "meshcore_bridge",
     };
 
     if (config.mqttUser && config.mqttPass) {
