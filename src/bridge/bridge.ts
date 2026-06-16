@@ -279,10 +279,18 @@ export class MeshCoreBridge {
         const strPayload = JSON.stringify(payload);
 
         // Publish to specific topic
-        this.mqttClient.publish(topic, strPayload, { qos: 1, retain }, (err) => {
-            if (err)
-                this.logger.error({ err, topic }, "Failed to publish to MQTT");
-        });
+        this.mqttClient.publish(
+            topic,
+            strPayload,
+            { qos: 1, retain },
+            (err) => {
+                if (err)
+                    this.logger.error(
+                        { err, topic },
+                        "Failed to publish to MQTT"
+                    );
+            }
+        );
 
         // Publish to /all
         this.mqttClient.publish(
@@ -300,13 +308,29 @@ export class MeshCoreBridge {
     }
 
     /**
-     * Publish errors to the "all" topic
+     * Publishes an error to the <topic>/errors and <topic>/all topics if there are errors
+     * handling incoming commands
      * @param error
      */
     private publishError(error: any) {
+        const strPayload = JSON.stringify(error);
+
+        this.mqttClient.publish(
+            `${this.config.mqttTopic}/errors`,
+            strPayload,
+            { qos: 1 },
+            (err) => {
+                if (err)
+                    this.logger.error(
+                        { err },
+                        "Failed to publish error to /errors topic"
+                    );
+            }
+        );
+
         this.mqttClient.publish(
             `${this.config.mqttTopic}/all`,
-            JSON.stringify(error),
+            strPayload,
             { qos: 1 },
             (err) => {
                 if (err)
