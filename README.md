@@ -38,7 +38,7 @@ Options:
   --mqtt-port <port>               MQTT broker port
   --mqtt-user <user>               MQTT username
   --mqtt-pass <password>           MQTT password
-  --mqtt-client-id <id>           MQTT client ID (default: "meshcore_bridge")
+  --mqtt-client-id <id>            MQTT client ID (default: "meshcore_bridge")
   --mqtt-topic <topic>             MQTT topic prefix
   --debug                          Enable debug logging
 ```
