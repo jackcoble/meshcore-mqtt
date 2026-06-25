@@ -135,7 +135,7 @@ export class MeshCoreBridge {
         this.logger.info(`Command queue length: ${this.commandQueue.length}`);
 
         while (this.commandQueue.length > 0) {
-            const item = this.commandQueue.shift();
+            const item = this.commandQueue.shift()!;
             if (!item.retries) {
                 item.retries = 0;
             }

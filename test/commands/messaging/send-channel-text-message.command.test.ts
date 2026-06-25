@@ -206,24 +206,24 @@ describe("SendChannelTextMessageCommand", () => {
     });
 
     describe("fromBuffer", () => {
-        it("should return null on OK response", () => {
+        it("should return code on OK response", () => {
             const command = new SendChannelTextMessageCommand();
             command.fromJSON({ text: "Test" });
 
             const buffer = Buffer.from([ResponseCode.OK]);
             const result = command.fromBuffer(buffer);
 
-            expect(result).toBeNull();
+            expect(result).toEqual({ code: ResponseCode.OK });
         });
 
-        it("should return null on ERR response", () => {
+        it("should return code on ERR response", () => {
             const command = new SendChannelTextMessageCommand();
             command.fromJSON({ text: "Test" });
 
             const buffer = Buffer.from([ResponseCode.ERR]);
             const result = command.fromBuffer(buffer);
 
-            expect(result).toBeNull();
+            expect(result).toEqual({ code: ResponseCode.ERR });
         });
 
         it("should throw on unexpected response code", () => {

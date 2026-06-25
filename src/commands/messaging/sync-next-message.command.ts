@@ -19,7 +19,7 @@ export class SyncNextMessageCommand extends Command {
         ResponseCode.CHANNEL_MSG_RECV_V3, // V3 App Client
     ];
 
-    private messageResponseCode: ResponseCode;
+    private messageResponseCode!: ResponseCode;
 
     /**
      * Check if the message was sent directly (contact message)
@@ -125,6 +125,8 @@ export class SyncNextMessageCommand extends Command {
                 text: text,
             };
         }
+
+        return { code };
     }
 }
 
