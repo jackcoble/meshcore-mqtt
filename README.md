@@ -5,33 +5,9 @@
 
 ## Requirements
 
-The MeshCore to MQTT Bridge requires you have a device that is flashed with the **Companion USB**, or connected to Wi-Fi.
+The MeshCore to MQTT Bridge requires you have a device that is flashed with the **Companion** firmware. You can connect the bridge to your radio via USB (Serial) or Wi-Fi (TCP).
 
-## MQTT Topics
-
-### Published Topics (Device → MQTT)
-
-| Topic                                    | Description                           |
-| ---------------------------------------- | ------------------------------------- |
-| `{topic}/self_info`                      | Device self-information at startup    |
-| `{topic}/device_info`                    | Device capabilities and hardware info |
-| `{topic}/battery_and_storage`            | Battery voltage and storage usage     |
-| `{topic}/message/direct/{pubkey_prefix}` | Direct messages from other devices    |
-| `{topic}/message/channel/{channel_idx}`  | Channel broadcast messages            |
-| `{topic}/all`                            | All messages (copy of all above)      |
-
-### Subscribed Topics (MQTT → Device)
-
-| Topic             | Description                                                   |
-| ----------------- | ------------------------------------------------------------- |
-| `{topic}/command` | Send commands to the device (JSON format, see Commands below) |
-
-> [!NOTE]
-> `{topic}` is the configurable MQTT topic prefix (default: `meshcore`)
-
-## Commands
-
-Please see the [SUPPORTED_COMMANDS.md](docs/SUPPORTED_COMMANDS.md) document.
+If you try and use this bridge with a Room Server or a Repeater, it will not work as expected. It is not the intention of this project to receive data from these firmwares.
 
 ## Installation (local)
 
@@ -62,6 +38,7 @@ Options:
   --mqtt-port <port>               MQTT broker port
   --mqtt-user <user>               MQTT username
   --mqtt-pass <password>           MQTT password
+  --mqtt-client-id <id>            MQTT client ID (default: "meshcore_bridge")
   --mqtt-topic <topic>             MQTT topic prefix
   --debug                          Enable debug logging
 ```
@@ -93,6 +70,7 @@ Create a `config.json` file in the project root (or specify a custom path with `
     "mqttPort": 1883,
     "mqttUser": "user",
     "mqttPass": "password",
+    "mqttClientId": "meshcore_bridge",
     "mqttTopic": "meshcore",
     "debug": false
 }
@@ -125,6 +103,7 @@ Create a `config.json` file in the project root (or specify a custom path with `
     "mqttPort": 1883,
     "mqttUser": "user",
     "mqttPass": "password",
+    "mqttClientId": "meshcore_bridge",
     "mqttTopic": "meshcore",
     "debug": false
 }
@@ -150,6 +129,7 @@ $ pnpm start
 | `MESHCORE_MQTT_PORT`       | MQTT broker port             | `1883`                |
 | `MESHCORE_MQTT_USER`       | MQTT username                | -                     |
 | `MESHCORE_MQTT_PASS`       | MQTT password                | -                     |
+| `MESHCORE_MQTT_CLIENT_ID`  | MQTT client ID               | `meshcore_bridge`     |
 | `MESHCORE_MQTT_TOPIC`      | MQTT topic prefix            | `meshcore`            |
 | `MESHCORE_DEBUG`           | Enable debug logging         | `false`               |
 

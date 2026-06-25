@@ -57,6 +57,9 @@ export function loadEnvConfig(): PartialConfig {
     if (process.env.MESHCORE_MQTT_PASS) {
         config.mqttPass = process.env.MESHCORE_MQTT_PASS;
     }
+    if (process.env.MESHCORE_MQTT_CLIENT_ID) {
+        config.mqttClientId = process.env.MESHCORE_MQTT_CLIENT_ID;
+    }
     if (process.env.MESHCORE_MQTT_TOPIC) {
         config.mqttTopic = process.env.MESHCORE_MQTT_TOPIC;
     }
@@ -110,6 +113,9 @@ export function loadJsonConfig(configPath: string): PartialConfig {
         if (typeof json.mqttPass === "string") {
             config.mqttPass = json.mqttPass;
         }
+        if (typeof json.mqttClientId === "string") {
+            config.mqttClientId = json.mqttClientId;
+        }
         if (typeof json.mqttTopic === "string") {
             config.mqttTopic = json.mqttTopic;
         }
@@ -152,6 +158,7 @@ export interface CliOptions {
     mqttPort?: string;
     mqttUser?: string;
     mqttPass?: string;
+    mqttClientId?: string;
     mqttTopic?: string;
     debug?: boolean;
     config?: string;
@@ -189,6 +196,9 @@ function loadCliConfig(options: CliOptions): PartialConfig {
     }
     if (options.mqttPass) {
         config.mqttPass = options.mqttPass;
+    }
+    if (options.mqttClientId) {
+        config.mqttClientId = options.mqttClientId;
     }
     if (options.mqttTopic) {
         config.mqttTopic = options.mqttTopic;

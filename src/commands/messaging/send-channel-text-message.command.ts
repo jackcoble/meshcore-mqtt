@@ -22,7 +22,7 @@ export class SendChannelTextMessageCommand extends ParameterisedCommand {
             .int()
             .min(0)
             .default(() => Math.floor(Date.now() / 1000)),
-        text: z.string().max(160).default(null),
+        text: z.string().max(160).default(""),
     });
 
     private params?: z.infer<typeof this.commandSchema>;
@@ -55,11 +55,11 @@ export class SendChannelTextMessageCommand extends ParameterisedCommand {
         return Buffer.concat([header, textBuf]);
     }
 
-    fromBuffer(data: Buffer) {
+    fromBuffer(data: Buffer): object {
         const r = new BinaryReader(data);
         const code = r.u8();
         this.validateResponseCode(code);
-        return null;
+        return { code };
     }
 }
 

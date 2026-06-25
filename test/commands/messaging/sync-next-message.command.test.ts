@@ -53,7 +53,7 @@ describe("SyncNextMessageCommand", () => {
 
             const result = command.fromBuffer(buffer);
 
-            expect(result).toBeUndefined();
+            expect(result).toEqual({ code: ResponseCode.NO_MORE_MESSAGES });
         });
     });
 

@@ -9,7 +9,7 @@ RUN corepack enable
 WORKDIR /app
 
 # Copy only files needed for dependency resolution
-COPY package.json pnpm-lock.yaml ./
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 
 # Install deps (frozen for reproducibility)
 RUN pnpm install --frozen-lockfile
